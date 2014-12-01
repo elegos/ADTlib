@@ -55,7 +55,7 @@ You may though want to know what the various classes do:
 ## Changelog ##
 0.2.0.0
 
-- The state of the device is been read dynamically executing `adb get-state`
+- The state of the device is being read dynamically executing `adb get-state`
 
 
 0.1.0.0
