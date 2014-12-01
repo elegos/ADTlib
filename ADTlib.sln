@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{50537408-A9D0-4D54-B357-6CC145BCFF44}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ADTlib", "ADTlib\ADTlib.csproj", "{B20DC586-17A7-4270-AD05-7F85AF6A22EB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{50537408-A9D0-4D54-B357-6CC145BCFF44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50537408-A9D0-4D54-B357-6CC145BCFF44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50537408-A9D0-4D54-B357-6CC145BCFF44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B20DC586-17A7-4270-AD05-7F85AF6A22EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B20DC586-17A7-4270-AD05-7F85AF6A22EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B20DC586-17A7-4270-AD05-7F85AF6A22EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B20DC586-17A7-4270-AD05-7F85AF6A22EB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
