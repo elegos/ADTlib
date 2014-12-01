@@ -33,7 +33,7 @@ It wraps the original executables and executes them, interpreting the output and
 - **Advanced Fastboot commands** (TBA)
 - **Device**
 	- ✔ Read the build.prop file and get any of its properties
-	- Read the device's state on the fly
+	- ✔ Read the device's state on the fly
 	- ✔ Read the device's serial number
 
 ---
@@ -50,3 +50,14 @@ You may though want to know what the various classes do:
 - `Utils\Exe`: a utility class to easily execute adb/fastboot commands.
 - `Utils\ResourcesManager`: a utility class to automatically extract adb, fastboot and their DLLs to an %AppData% subfolder; to retrieve their location (execution path). It's a singleton.
 - `Extensions.cs` file: some useful string extensions for the ADB arguments.
+
+---
+## Changelog ##
+0.2.0.0
+
+- The state of the device is been read dynamically executing `adb get-state`
+
+
+0.1.0.0
+
+- Initial commit

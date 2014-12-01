@@ -20,6 +20,12 @@ namespace GiacomoFurlan.ADTlib
         public const string CommandShell = "shell";
         public const string CommandUninstall = "unistall";
 
+        public const string StateBootloader = "bootloader";
+        public const string StateDevice = "device";
+        public const string StateOffline = "offline";
+        public const string StateUnauthorized = "unauthorized";
+        public const string StateUnknown = "unknown";
+
         private static Adb _instance;
 
         public static Adb Instance
@@ -54,12 +60,21 @@ namespace GiacomoFurlan.ADTlib
                 devices.Add(new Device
                 {
                     Build = new Build(matches.Groups["serial"].Value),
-                    SerialNumber = matches.Groups["serial"].Value,
-                    State = matches.Groups["state"].Value
+                    SerialNumber = matches.Groups["serial"].Value
                 });
             }
 
             return devices;
+        }
+
+        /// <summary>
+        /// Executes adb and returns the current state of the device (<see cref="StateUnknown"/> if not found or on error)
+        /// </summary>
+        /// <param name="device"></param>
+        /// <returns></returns>
+        public string GetDeviceState(Device device)
+        {
+            return Execute(device, "get-state", null, true).TrimEnd() ?? StateUnknown;
         }
 
         /// <summary>
@@ -72,7 +87,9 @@ namespace GiacomoFurlan.ADTlib
         /// <returns></returns>
         public string Execute(Device device, string command, List<string> arguments, bool returnValue)
         {
-            if (String.IsNullOrEmpty(command) || arguments == null || !arguments.Any()) return null;
+            if (String.IsNullOrEmpty(command)) return null;
+            if (arguments == null) arguments = new List<string>();
+
             arguments.Insert(0, command);
 
             if (returnValue) return Exe.AdbReturnString(device, arguments.ToArray());

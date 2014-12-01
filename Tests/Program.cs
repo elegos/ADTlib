@@ -29,6 +29,23 @@ namespace Tests
                     Console.WriteLine(device.Model + " - " + device.SerialNumber + " (" + device.State + ")");
                 }
 
+                var testDevice = devices.FirstOrDefault();
+                if (testDevice == null)
+                {
+                    Console.WriteLine("No devices connected.");
+                    goto EndOfTests;
+                }
+
+                Console.WriteLine("Executing Adb.GetState(device)");
+                var state = adb.GetDeviceState(devices.FirstOrDefault());
+                Console.WriteLine("State: " + state);
+
+                if (state != Adb.StateDevice)
+                {
+                    Console.WriteLine("Device connected, but status not 'device' ({0})", state);
+                    goto EndOfTests;
+                }
+
                 Console.WriteLine("Executing Adb.Push(device, source, dest)");
                 var pushed = adb.Push(devices.FirstOrDefault(), "TestFiles\\LoremIpsum.txt", "/sdcard/test/abc/");
                 Console.WriteLine("Command: " + (pushed ? "success" : "fail"));
@@ -40,7 +57,6 @@ namespace Tests
                 Console.WriteLine("Executing Adb.Delete(device, pathToFileOrDirectory)");
                 var deleted = adb.Delete(devices.FirstOrDefault(), "/sdcard/test/");
                 Console.WriteLine("Command: " + (deleted ? "success" : "fail"));
-
                 #endregion
             }
             catch (Exception ex)
@@ -49,6 +65,7 @@ namespace Tests
             }
 
             // end of tests
+            EndOfTests:
             Console.ReadKey();
         }
     }
