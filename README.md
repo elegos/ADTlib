@@ -18,7 +18,7 @@ It wraps the original executables and executes them, interpreting the output and
 	- ✔ Push a file to the device
 	- ✔ Pull a file from the device
 	- ✔ Delete a file from the device
-	- Execute a shell command
+	- ✔ Execute a shell command
 	- Install an application from an APK hosted on the computer
 	- Uninstall an application
 	- Do a backup
