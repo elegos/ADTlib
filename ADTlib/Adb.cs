@@ -74,7 +74,7 @@ namespace GiacomoFurlan.ADTlib
         /// <returns></returns>
         public string GetDeviceState(Device device)
         {
-            return Execute(device, "get-state", null, true).TrimEnd() ?? StateUnknown;
+            return Execute(device, "get-state", true).TrimEnd() ?? StateUnknown;
         }
 
         /// <summary>
@@ -85,17 +85,28 @@ namespace GiacomoFurlan.ADTlib
         /// <param name="arguments"></param>
         /// <param name="returnValue"></param>
         /// <returns></returns>
-        public string Execute(Device device, string command, List<string> arguments, bool returnValue)
+        public string Execute(Device device, string command, bool returnValue, params string[] arguments)
         {
             if (String.IsNullOrEmpty(command)) return null;
-            if (arguments == null) arguments = new List<string>();
+            if (arguments == null) arguments = new string[]{};
 
-            arguments.Insert(0, command);
+            arguments = new string[] {command}.Concat(arguments).ToArray();
 
-            if (returnValue) return Exe.AdbReturnString(device, arguments.ToArray());
+            if (returnValue) return Exe.AdbReturnString(device, arguments);
 
-            Exe.Adb(device, arguments.ToArray());
+            Exe.Adb(device, arguments);
             return null;
+        }
+
+        /// <summary>
+        /// Executes a shell command, returning the eventual result.
+        /// </summary>
+        /// <param name="device">The device to execute the command on, if null the first one will be used.</param>
+        /// <param name="parameters">The command and its arguments</param>
+        /// <returns></returns>
+        public string Shell(Device device, params string[] parameters)
+        {
+            return Execute(device, CommandShell, true, parameters).TrimEnd();
         }
 
         /// <summary>
@@ -115,7 +126,7 @@ namespace GiacomoFurlan.ADTlib
             if (String.IsNullOrEmpty(destFileName)) destFileName = Path.GetFileName(filePath);
 
             // create the destination path
-            var mkdir = Execute(device, CommandShell, new List<string> {"mkdir -p", destDirectory}, true);
+            var mkdir = Shell(device, "mkdir -p", destDirectory);
             if (mkdir.Contains("failed"))
             {
                 Debug.WriteLine("Unable to create directory " + destDirectory);
@@ -123,10 +134,10 @@ namespace GiacomoFurlan.ADTlib
             }
 
             // setup the arguments
-            var arguments = new List<string> { filePath, destDirectory + "/" + destFileName };
+            var arguments = new string[]{ filePath, destDirectory + "/" + destFileName };
 
             // execute
-            var push = Execute(device, CommandPush, arguments, true);
+            var push = Execute(device, CommandPush, true, arguments);
             return push == null || !push.Contains("failed");
         }
 
@@ -143,8 +154,8 @@ namespace GiacomoFurlan.ADTlib
             var destFileName = Path.GetFileName(destPath);
             if (String.IsNullOrEmpty(destFileName)) destFileName = Path.GetFileName(sourcePath);
 
-            var execute = Execute(device, CommandPull,
-                new List<string> { sourcePath, Path.Combine(new string[] { destDirectory, destFileName }).WrapInQuotes() }, true);
+            var execute = Execute(device, CommandPull, true,
+                new string[] { sourcePath, Path.Combine(new string[] { destDirectory, destFileName }).WrapInQuotes() });
 
             return execute == null || !execute.Contains("not exist");
         }
@@ -157,7 +168,7 @@ namespace GiacomoFurlan.ADTlib
         /// <returns></returns>
         public bool Delete(Device device, string pathToFileOrDirectory)
         {
-            var execute = Execute(device, CommandShell, new List<string> { "rm -rf", pathToFileOrDirectory }, true);
+            var execute = Shell(device, "rm -rf", pathToFileOrDirectory);
 
             return (String.IsNullOrEmpty(execute));
         }

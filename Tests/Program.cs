@@ -11,6 +11,8 @@ namespace Tests
         {
             var adb = Adb.Instance;
 
+            const string testTmpFolder = "/sdcard/adtlibtests";
+
             try
             {
                 #region Class Exe
@@ -37,7 +39,7 @@ namespace Tests
                 }
 
                 Console.WriteLine("Executing Adb.GetState(device)");
-                var state = adb.GetDeviceState(devices.FirstOrDefault());
+                var state = adb.GetDeviceState(testDevice);
                 Console.WriteLine("State: " + state);
 
                 if (state != Adb.StateDevice)
@@ -47,15 +49,18 @@ namespace Tests
                 }
 
                 Console.WriteLine("Executing Adb.Push(device, source, dest)");
-                var pushed = adb.Push(devices.FirstOrDefault(), "TestFiles\\LoremIpsum.txt", "/sdcard/test/abc/");
+                var pushed = adb.Push(testDevice, "TestFiles\\LoremIpsum.txt", testTmpFolder + "/");
                 Console.WriteLine("Command: " + (pushed ? "success" : "fail"));
 
                 Console.WriteLine("Executing Adb.Pull(device, source, dest)");
-                var pulled = adb.Pull(devices.FirstOrDefault(), "/sdcard/test/abc/LoremIpsum.txt", ".\\");
+                var pulled = adb.Pull(testDevice, testTmpFolder + "/LoremIpsum.txt", ".\\");
                 Console.WriteLine("Command: " + (pulled ? "success" : "fail"));
 
+                Console.WriteLine("Executing Adb.Shell(device, params)");
+                Console.WriteLine("List of files in " + testTmpFolder + ": " + adb.Shell(testDevice, "ls", "-l", testTmpFolder));
+
                 Console.WriteLine("Executing Adb.Delete(device, pathToFileOrDirectory)");
-                var deleted = adb.Delete(devices.FirstOrDefault(), "/sdcard/test/");
+                var deleted = adb.Delete(testDevice, testTmpFolder);
                 Console.WriteLine("Command: " + (deleted ? "success" : "fail"));
                 #endregion
             }
