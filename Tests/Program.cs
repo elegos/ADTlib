@@ -25,8 +25,15 @@ namespace Tests
                 #endregion
 
                 #region Class Adb
+                Console.WriteLine("Waiting for device(s) (10 seconds)...");
+                adb.WaitForDevice(null, 10000);
                 Console.WriteLine("Executing Adb.GetDevicesList()");
                 var devices = adb.GetDevicesList();
+                if (devices == null || !devices.Any())
+                {
+                    Console.WriteLine("No devices found. Press any key to exit.");
+                    goto EndOfTests;
+                }
                 foreach (var device in devices)
                 {
                     Console.WriteLine(device.Model + " - " + device.SerialNumber + " (" + device.State + ")");
@@ -82,6 +89,7 @@ namespace Tests
 
             // end of tests
             EndOfTests:
+            Console.WriteLine(Environment.NewLine + "Press any key to exit.");
             Console.ReadKey();
         }
     }

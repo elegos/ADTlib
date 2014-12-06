@@ -36,9 +36,10 @@ namespace GiacomoFurlan.ADTlib.Utils
         /// </summary>
         /// <param name="executable">ResourcesManager.AdbExe or ResourcesManager.FastbootExe</param>
         /// <param name="device">The device to execute the command on (required attribute: SerialNumber)</param>
+        /// <param name="timeoutMilliseconds">Wait timeout for the process to end (null: infinite)</param>
         /// <param name="parameters">the list of parameters passed to the executable</param>
         /// <returns>the output, null in case executable is not a file</returns>
-        private static ExeResponse Run(string executable, Device device, IEnumerable<string> parameters)
+        private static ExeResponse Run(string executable, Device device, int? timeoutMilliseconds, IEnumerable<string> parameters)
         {
             try
             {
@@ -55,7 +56,15 @@ namespace GiacomoFurlan.ADTlib.Utils
 
                 var proc = new Process { StartInfo = startInfo };
                 if (!proc.Start()) throw new Exception("Unable to start process " + executable + " " + startInfo.Arguments);
-                proc.WaitForExit();
+
+                if (timeoutMilliseconds.HasValue) proc.WaitForExit(timeoutMilliseconds.Value);
+                else proc.WaitForExit();
+
+                if (!proc.HasExited)
+                {
+                    proc.Kill();
+                    return null;
+                }
 
                 var error = proc.StandardError.ReadToEnd();
 
@@ -64,8 +73,8 @@ namespace GiacomoFurlan.ADTlib.Utils
                 return new ExeResponse
                 {
                     ExitCode = proc.ExitCode,
-                    StdError = proc.StandardError.ReadToEnd().TrimEnd(),
-                    StdOutput = proc.StandardOutput.ReadToEnd().TrimEnd()
+                    Error = proc.StandardError.ReadToEnd().TrimEnd(),
+                    Output = proc.StandardOutput.ReadToEnd().TrimEnd()
                 };
             }
             catch (Exception ex)
@@ -77,7 +86,12 @@ namespace GiacomoFurlan.ADTlib.Utils
 
         public static ExeResponse Adb(Device device, IEnumerable<string> parameters)
         {
-            return Run(ResourcesManager.AdbExe, device, parameters);
+            return Run(ResourcesManager.AdbExe, device, null, parameters);
+        }
+
+        public static ExeResponse Adb(Device device, int? timeoutMilliseconds, IEnumerable<string> parameters)
+        {
+            return Run(ResourcesManager.AdbExe, device, timeoutMilliseconds, parameters);
         }
     }
 }

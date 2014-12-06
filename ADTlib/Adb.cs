@@ -20,6 +20,7 @@ namespace GiacomoFurlan.ADTlib
         internal const string CommandRestore = "restore";
         internal const string CommandShell = "shell";
         internal const string CommandUninstall = "unistall";
+        internal const string CommandWaitForDevice = "wait-for-device";
 
         public const string RebootBootloader = "bootloader";
         public const string RebootRecovery = "recovery";
@@ -50,7 +51,7 @@ namespace GiacomoFurlan.ADTlib
 
             if (ExeResponse.IsNullOrAbnormalExit(output)) return null;
 
-            var cursor = output.StdOutput.Split(new[] {Environment.NewLine}, StringSplitOptions.None).GetEnumerator();
+            var cursor = output.Output.Split(new[] {Environment.NewLine}, StringSplitOptions.None).GetEnumerator();
 
             var devices = new List<Device>();
             while (cursor.MoveNext())
@@ -79,7 +80,7 @@ namespace GiacomoFurlan.ADTlib
         public string GetDeviceState(Device device)
         {
             var exec = Execute(device, "get-state");
-            return ExeResponse.IsNullOrAbnormalExit(exec) ? StateUnknown : exec.StdOutput;
+            return ExeResponse.IsNullOrAbnormalExit(exec) ? StateUnknown : exec.Output;
         }
 
         /// <summary>
@@ -91,12 +92,25 @@ namespace GiacomoFurlan.ADTlib
         /// <returns></returns>
         public ExeResponse Execute(Device device, string command, params string[] arguments)
         {
+            return Execute(device, command, null, arguments);
+        }
+
+        /// <summary>
+        /// Executes a generic ADB command.
+        /// </summary>
+        /// <param name="device">Optional if there is only one device attached</param>
+        /// <param name="command"></param>
+        /// <param name="timeoutMilliseconds">Timeout (in milliseconds) before the method to end in any case. If null, there is no timeout.</param>
+        /// <param name="arguments"></param>
+        /// <returns></returns>
+        public ExeResponse Execute(Device device, string command, int? timeoutMilliseconds, params string[] arguments)
+        {
             if (String.IsNullOrEmpty(command)) return null;
             if (arguments == null) arguments = new string[] { };
 
             arguments = new[] { command }.Concat(arguments).ToArray();
 
-            return Exe.Adb(device, arguments);
+            return Exe.Adb(device, timeoutMilliseconds, arguments);
         }
 
         /// <summary>
@@ -129,7 +143,7 @@ namespace GiacomoFurlan.ADTlib
             // create the destination path
             var mkdir = Shell(device, "mkdir -p", destDirectory);
 
-            if (ExeResponse.IsNullOrAbnormalExit(mkdir) || mkdir.StdOutput.Contains("failed"))
+            if (ExeResponse.IsNullOrAbnormalExit(mkdir) || mkdir.Output.Contains("failed"))
             {
                 Debug.WriteLine("Unable to create directory " + destDirectory);
                 return false;
@@ -140,7 +154,7 @@ namespace GiacomoFurlan.ADTlib
 
             // execute
             var push = Execute(device, CommandPush, arguments);
-            return !ExeResponse.IsNullOrAbnormalExit(push) && !push.StdOutput.Contains("failed");
+            return !ExeResponse.IsNullOrAbnormalExit(push) && !push.Output.Contains("failed");
         }
 
         /// <summary>
@@ -159,7 +173,7 @@ namespace GiacomoFurlan.ADTlib
             var execute = Execute(device, CommandPull, sourcePath,
                 Path.Combine(new[] {destDirectory, destFileName}).WrapInQuotes());
 
-            return !ExeResponse.IsNullOrAbnormalExit(execute) && !execute.StdOutput.Contains("not exist");
+            return !ExeResponse.IsNullOrAbnormalExit(execute) && !execute.Output.Contains("not exist");
         }
 
         /// <summary>
@@ -172,7 +186,7 @@ namespace GiacomoFurlan.ADTlib
         {
             var execute = Shell(device, "rm -rf", pathToFileOrDirectory);
 
-            return !ExeResponse.IsNullOrAbnormalExit(execute) && String.IsNullOrEmpty(execute.StdOutput);
+            return !ExeResponse.IsNullOrAbnormalExit(execute) && String.IsNullOrEmpty(execute.Output);
         }
 
         /// <summary>
@@ -207,7 +221,7 @@ namespace GiacomoFurlan.ADTlib
             var execute = Execute(device, CommandInstall, parameters.ToArray());
 
             return !ExeResponse.IsNullOrAbnormalExit(execute) &&
-                   execute.StdOutput.IndexOf("success", StringComparison.CurrentCultureIgnoreCase) > 0;
+                   execute.Output.IndexOf("success", StringComparison.CurrentCultureIgnoreCase) > 0;
         }
 
         /// <summary>
@@ -224,7 +238,7 @@ namespace GiacomoFurlan.ADTlib
                 : Execute(device, CommandUninstall);
 
             return !ExeResponse.IsNullOrAbnormalExit(execute) &&
-                   execute.StdOutput.IndexOf("success", StringComparison.CurrentCultureIgnoreCase) > 0;
+                   execute.Output.IndexOf("success", StringComparison.CurrentCultureIgnoreCase) > 0;
         }
 
 
@@ -290,6 +304,16 @@ namespace GiacomoFurlan.ADTlib
             return String.IsNullOrEmpty(mode)
                 ? Execute(device, CommandReboot)
                 : Execute(device, CommandReboot, mode);
+        }
+
+        /// <summary>
+        /// Waits for a device
+        /// </summary>
+        /// <param name="device">If null, the first connected device will trigger the end of the method.</param>
+        /// <param name="timeoutMilliseconds">Timeout (in milliseconds) before the method to end in any case</param>
+        public void WaitForDevice(Device device, int? timeoutMilliseconds)
+        {
+            Execute(device, CommandWaitForDevice, timeoutMilliseconds);
         }
     }
 }

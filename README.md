@@ -12,7 +12,7 @@ It wraps the original executables and executes them, interpreting the output and
 
 ## Work schedule ##
 - ✔ **Resources** copy (executables and relative libraries) & basic execution from `%AppData%`
-- **Basic ADB commands**
+- ✔ **Basic ADB commands**
 	- ✔ Get the devices' list (see `Device`)
 	- ✔ Execute a generic command with parameters (with or without returning output)
 	- ✔ Push a file to the device
@@ -25,6 +25,7 @@ It wraps the original executables and executes them, interpreting the output and
 	- ✔ Do a restore from a previous backup
 	- ✔ Reboot
 - **Advanced ADB commands**
+	- ✔ Wait for any device, or a specific one
 	- Start and kill the adb server
 	- (Re)start the adb server as root
 	- Remount the /system partition in read/write
@@ -53,6 +54,12 @@ You may though want to know what the various classes do:
 
 ---
 ## Changelog ##
+0.7.0.0
+
+- Added Adb.WaitForDevice
+- Implemented timeout in Exe.Run
+- Renamed ExeResult's StdOutput and StdError in Output and Error 
+
 0.6.0.0
 
 - Added Adb.Reboot
