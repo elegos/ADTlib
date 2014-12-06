@@ -53,6 +53,11 @@ You may though want to know what the various classes do:
 
 ---
 ## Changelog ##
+0.4.5.0
+
+- Modified non-parametrical method names (from \*NoParams to \*NoParametric)
+- Added Adb.Uninstall
+
 0.4.0.0
 
 - Created non-parametrical method aliases for low-level commands

@@ -85,7 +85,7 @@ namespace GiacomoFurlan.ADTlib
         /// <param name="returnValue"></param>
         /// <param name="arguments"></param>
         /// <returns></returns>
-        public string ExecuteNoParams(Device device, string command, bool returnValue, IEnumerable<string> arguments)
+        public string ExecuteNoParametric(Device device, string command, bool returnValue, IEnumerable<string> arguments)
         {
             if (String.IsNullOrEmpty(command)) return null;
             if (arguments == null) arguments = new string[] { };
@@ -108,7 +108,7 @@ namespace GiacomoFurlan.ADTlib
         /// <returns></returns>
         public string Execute(Device device, string command, bool returnValue, params string[] arguments)
         {
-            return ExecuteNoParams(device, command, returnValue, arguments);
+            return ExecuteNoParametric(device, command, returnValue, arguments);
         }
 
         /// <summary>
@@ -117,9 +117,9 @@ namespace GiacomoFurlan.ADTlib
         /// <param name="device">The device to execute the command on, if null the first one will be used.</param>
         /// <param name="parameters">The command and its arguments</param>
         /// <returns></returns>
-        public string ShellNoParams(Device device, IEnumerable<string> parameters)
+        public string ShellNoParametric(Device device, IEnumerable<string> parameters)
         {
-            return ExecuteNoParams(device, CommandShell, true, parameters).TrimEnd();
+            return ExecuteNoParametric(device, CommandShell, true, parameters).TrimEnd();
         }
 
         /// <summary>
@@ -223,8 +223,16 @@ namespace GiacomoFurlan.ADTlib
                     "--iv", encryption.IV
                 });
             }
-            var execute = ExecuteNoParams(device, CommandInstall, true, parameters);
+            var execute = ExecuteNoParametric(device, CommandInstall, true, parameters);
 
+            return execute.IndexOf("success", StringComparison.CurrentCultureIgnoreCase) > 0;
+        }
+
+        public bool Uninstall(Device device, string packageName, bool keepData)
+        {
+            var execute = keepData
+                ? Execute(device, CommandUninstall, true, "-k")
+                : Execute(device, CommandUninstall, true);
             return execute.IndexOf("success", StringComparison.CurrentCultureIgnoreCase) > 0;
         }
     }
