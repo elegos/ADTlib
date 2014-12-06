@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using GiacomoFurlan.ADTlib;
+using GiacomoFurlan.ADTlib.Utils;
 
 namespace Tests
 {
@@ -48,20 +50,30 @@ namespace Tests
                     goto EndOfTests;
                 }
 
-                Console.WriteLine("Executing Adb.Push(device, source, dest)");
+                Console.WriteLine("Executing Adb.Push");
                 var pushed = adb.Push(testDevice, "TestFiles\\LoremIpsum.txt", testTmpFolder + "/");
                 Console.WriteLine("Command: " + (pushed ? "success" : "fail"));
 
-                Console.WriteLine("Executing Adb.Pull(device, source, dest)");
+                Console.WriteLine("Executing Adb.Pull");
                 var pulled = adb.Pull(testDevice, testTmpFolder + "/LoremIpsum.txt", ".\\");
                 Console.WriteLine("Command: " + (pulled ? "success" : "fail"));
 
-                Console.WriteLine("Executing Adb.Shell(device, params)");
+                Console.WriteLine("Executing Adb.Shell");
                 Console.WriteLine("List of files in " + testTmpFolder + ": " + adb.Shell(testDevice, "ls", "-l", testTmpFolder));
 
-                Console.WriteLine("Executing Adb.Delete(device, pathToFileOrDirectory)");
+                Console.WriteLine("Executing Adb.Delete");
                 var deleted = adb.Delete(testDevice, testTmpFolder);
                 Console.WriteLine("Command: " + (deleted ? "success" : "fail"));
+
+                var tempBackup = Path.Combine(Environment.CurrentDirectory, "AndroidBackup.ab");
+                Console.WriteLine("Executing Adb.Backup (backup: Facebook app)");
+                adb.Backup(testDevice, tempBackup, false, false, false, false, false, "com.facebook.katana");
+
+                Console.WriteLine("Executing Adb.Restore");
+                adb.Restore(testDevice, tempBackup);
+                Console.WriteLine("Press any key when the restore process is completed.");
+                Console.ReadKey();
+                if (File.Exists(tempBackup)) File.Delete(tempBackup);
                 #endregion
             }
             catch (Exception ex)

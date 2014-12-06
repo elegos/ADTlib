@@ -210,6 +210,7 @@ namespace GiacomoFurlan.ADTlib
         public bool Install(Device device, string pathToApk, bool forwardLock, bool reinstall, bool onSdCard, ApkEncryption encryption)
         {
             var parameters = new List<string>();
+            if (!File.Exists(pathToApk)) return false;
 
             if (forwardLock) parameters.Add("-l");
             if (reinstall) parameters.Add("-r");
@@ -223,17 +224,97 @@ namespace GiacomoFurlan.ADTlib
                     "--iv", encryption.IV
                 });
             }
+            parameters.Add(pathToApk.WrapInQuotes());
+
             var execute = ExecuteNoParametric(device, CommandInstall, true, parameters);
 
             return execute.IndexOf("success", StringComparison.CurrentCultureIgnoreCase) > 0;
         }
 
+        /// <summary>
+        /// Uninstall a package from the device
+        /// </summary>
+        /// <param name="device">If null, the first device in the list will be used.</param>
+        /// <param name="packageName">The package name of the application to uninstall</param>
+        /// <param name="keepData">If true, the process will maintain the user's data</param>
+        /// <returns></returns>
         public bool Uninstall(Device device, string packageName, bool keepData)
         {
             var execute = keepData
                 ? Execute(device, CommandUninstall, true, "-k")
                 : Execute(device, CommandUninstall, true);
             return execute.IndexOf("success", StringComparison.CurrentCultureIgnoreCase) > 0;
+        }
+
+        /// <summary>
+        /// Backup the user's (and system's) applications and the relative data.
+        /// It may throw an exception if you don't have the permission to write the backup file.
+        /// Note: it may take a while. It is highly suggested to be run in a separated thread.
+        /// </summary>
+        /// <param name="device">If null, the first device in the list will be used.</param>
+        /// <param name="pathToBackupFile">Where to save the backup (suggested extension: .ab)</param>
+        /// <param name="apk">If you want to include the APK files, too</param>
+        /// <param name="obb">If you want to include the APK extension files, too (the ones downloaded separately)</param>
+        /// <param name="shared">If you want to include the shared partition (/sdcard)</param>
+        /// <param name="all">If you want to do a backup of all the applications</param>
+        /// <param name="includeSystem">(Only if all is true) if you want to include the system applications in the complete backup</param>
+        /// <param name="packages">(Only if all is false) the packages you want to do the backup</param>
+        public void BackupNoParametric(Device device, string pathToBackupFile, bool apk, bool obb, bool shared, bool all,
+            bool includeSystem, IEnumerable<string> packages)
+        {
+            var directory = Path.GetDirectoryName(pathToBackupFile);
+            directory = directory ?? String.Empty;
+            if (!Directory.Exists(pathToBackupFile)) Directory.CreateDirectory(directory);
+            packages = packages ?? new string[]{};
+
+            var parameters = new List<string>
+            {
+                "-f", pathToBackupFile.WrapInQuotes(),
+                apk ? "-apk" : "-noapk",
+                obb ? "-obb" : "-noobb",
+                shared ? "-shared" : "-noshared"
+            };
+
+            if (all)
+            {
+                parameters.Add("-all");
+                if (includeSystem) parameters.Add("-system");
+            }
+            else
+            {
+                parameters.AddRange(packages);
+            }
+
+            ExecuteNoParametric(device, CommandBackup, false, parameters);
+        }
+
+        /// <summary>
+        /// Backup the user's (and system's) applications and the relative data.
+        /// It may throw an exception if you don't have the permission to write the backup file.
+        /// Note: it may take a while. It is highly suggested to be run in a separated thread.
+        /// </summary>
+        /// <param name="device">If null, the first device in the list will be used.</param>
+        /// <param name="pathToBackupFile">Where to save the backup (suggested extension: .ab)</param>
+        /// <param name="apk">If you want to include the APK files, too</param>
+        /// <param name="obb">If you want to include the APK extension files, too (the ones downloaded separately)</param>
+        /// <param name="shared">If you want to include the shared partition (/sdcard)</param>
+        /// <param name="all">If you want to do a backup of all the applications</param>
+        /// <param name="includeSystem">(Only if all is true) if you want to include the system applications in the complete backup</param>
+        /// <param name="packages">(Only if all is false) the packages you want to do the backup</param>
+        public void Backup(Device device, string pathToBackupFile, bool apk, bool obb, bool shared, bool all, bool includeSystem, params string[] packages)
+        {
+            BackupNoParametric(device, pathToBackupFile, apk, obb, shared, all, includeSystem, packages);
+        }
+
+        /// <summary>
+        /// Restores an Android backup (done via <see cref="Backup"/> or in any case an ADB backup file)
+        /// </summary>
+        /// <param name="device">If null, the first device in the list will be used.</param>
+        /// <param name="pathToBackupFile">The restore file path</param>
+        public void Restore(Device device, string pathToBackupFile)
+        {
+            Execute(device, CommandRestore, false, pathToBackupFile.WrapInQuotes());
+            // NOTE: you have to "manually" wait the process to end, as adb immediately exits
         }
     }
 }

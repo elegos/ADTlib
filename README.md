@@ -20,7 +20,7 @@ It wraps the original executables and executes them, interpreting the output and
 	- ✔ Delete a file from the device
 	- ✔ Execute a shell command
 	- ✔ Install an application from an APK hosted on the computer
-	- Uninstall an application
+	- ✔ Uninstall an application
 	- Do a backup
 	- Do a restore from a previous backup
 	- Reboot
@@ -53,6 +53,12 @@ You may though want to know what the various classes do:
 
 ---
 ## Changelog ##
+0.5.0.0
+
+- Added Adb.Backup
+- Added Adb.Restore
+- Added a (still unused) string extension to wait for a file lock
+
 0.4.5.0
 
 - Modified non-parametrical method names (from \*NoParams to \*NoParametric)

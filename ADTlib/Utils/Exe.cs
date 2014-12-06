@@ -42,12 +42,13 @@ namespace GiacomoFurlan.ADTlib.Utils
         {
             try
             {
-                var startInfo = RunPrepare(executable.WrapInQuotes(), device, parameters);
+                var startInfo = RunPrepare(executable, device, parameters);
 
                 // unescape escaped quotes
                 startInfo.FileName = startInfo.FileName.Replace("\\\"", "\"");
                 startInfo.Arguments = startInfo.Arguments.Replace("\\\"", "\"");
 
+                Debug.WriteLine(startInfo.FileName + " " + startInfo.Arguments);
                 var proc = new Process { StartInfo = startInfo };
                 if (!proc.Start()) throw new Exception("Unable to start process " + executable + " " + startInfo.Arguments);
                 proc.WaitForExit();
@@ -79,11 +80,16 @@ namespace GiacomoFurlan.ADTlib.Utils
                 startInfo.FileName = startInfo.FileName.Replace("\\\"", "\"");
                 startInfo.Arguments = startInfo.Arguments.Replace("\\\"", "\"");
 
+                Debug.WriteLine("{0} {1}", startInfo.FileName, startInfo.Arguments);
+
                 var proc = new Process { StartInfo = startInfo };
                 if (!proc.Start()) throw new Exception("Unable to start process " + executable + " " + startInfo.Arguments);
                 proc.WaitForExit();
 
+                Debug.WriteLine("Exit code: {0}", proc.ExitCode);
+
                 var error = proc.StandardError.ReadToEnd();
+
                 Debug.WriteIf(String.IsNullOrEmpty(error), error);
 
                 return proc.StandardOutput.ReadToEnd();
@@ -93,7 +99,6 @@ namespace GiacomoFurlan.ADTlib.Utils
                 Debug.Write(ex);
                 return null;
             }
-
         }
 
         public static void Adb(Device device, IEnumerable<string> parameters)
