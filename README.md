@@ -21,8 +21,8 @@ It wraps the original executables and executes them, interpreting the output and
 	- ✔ Execute a shell command
 	- ✔ Install an application from an APK hosted on the computer
 	- ✔ Uninstall an application
-	- Do a backup
-	- Do a restore from a previous backup
+	- ✔ Do a backup
+	- ✔ Do a restore from a previous backup
 	- Reboot
 - **Advanced ADB commands**
 	- Start and kill the adb server
