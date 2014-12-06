@@ -57,8 +57,7 @@ namespace GiacomoFurlan.ADTlib.Utils
                 var proc = new Process { StartInfo = startInfo };
                 if (!proc.Start()) throw new Exception("Unable to start process " + executable + " " + startInfo.Arguments);
 
-                if (timeoutMilliseconds.HasValue) proc.WaitForExit(timeoutMilliseconds.Value);
-                else proc.WaitForExit();
+                proc.WaitForExit(timeoutMilliseconds ?? -1);
 
                 if (!proc.HasExited)
                 {
