@@ -29,7 +29,7 @@ namespace GiacomoFurlan.ADTlib
             var raw = Exe.Adb(device, new[] {"shell", "cat /system/build.prop"});
 
             if (ExeResponse.IsNullOrAbnormalExit(raw)) return;
-            var lines = raw.StdOutput.Split(new[] {Environment.NewLine}, StringSplitOptions.None);
+            var lines = raw.Output.Split(new[] {Environment.NewLine}, StringSplitOptions.None);
 
             PropsList.Clear();
             foreach (var matches in lines.Select(line => Regex.Match(line, PropRegex, RegexOptions.IgnoreCase)).Where(matches => matches.Success))
