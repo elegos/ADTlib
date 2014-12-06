@@ -3,13 +3,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using GiacomoFurlan.ADTlib;
-using GiacomoFurlan.ADTlib.Utils;
 
 namespace Tests
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
             var adb = Adb.Instance;
 

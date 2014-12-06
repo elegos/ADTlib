@@ -23,7 +23,7 @@ It wraps the original executables and executes them, interpreting the output and
 	- ✔ Uninstall an application
 	- ✔ Do a backup
 	- ✔ Do a restore from a previous backup
-	- Reboot
+	- ✔ Reboot
 - **Advanced ADB commands**
 	- Start and kill the adb server
 	- (Re)start the adb server as root
@@ -53,6 +53,13 @@ You may though want to know what the various classes do:
 
 ---
 ## Changelog ##
+0.6.0.0
+
+- Added Adb.Reboot
+- Now all the void Adb methods return ExeResult, an object containing the exit code and the output and error in the form of strings.
+- Tweaked some code styling
+- Removed unnecessary NoParametric methods
+
 0.5.0.0
 
 - Added Adb.Backup

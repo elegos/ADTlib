@@ -1,6 +1,4 @@
-﻿using GiacomoFurlan.ADTlib.Utils;
-
-namespace GiacomoFurlan.ADTlib
+﻿namespace GiacomoFurlan.ADTlib
 {
     public class Device
     {

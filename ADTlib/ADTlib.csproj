@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Adb.cs" />
+    <Compile Include="Utils\ExeResponse.cs" />
     <Compile Include="ApkEncryption.cs" />
     <Compile Include="Build.cs" />
     <Compile Include="Device.cs" />

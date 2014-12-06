@@ -38,36 +38,7 @@ namespace GiacomoFurlan.ADTlib.Utils
         /// <param name="device">The device to execute the command on (required attribute: SerialNumber)</param>
         /// <param name="parameters">the list of parameters passed to the executable</param>
         /// <returns>the output, null in case executable is not a file</returns>
-        private static void Run(string executable, Device device, IEnumerable<string> parameters)
-        {
-            try
-            {
-                var startInfo = RunPrepare(executable, device, parameters);
-
-                // unescape escaped quotes
-                startInfo.FileName = startInfo.FileName.Replace("\\\"", "\"");
-                startInfo.Arguments = startInfo.Arguments.Replace("\\\"", "\"");
-
-                Debug.WriteLine(startInfo.FileName + " " + startInfo.Arguments);
-                var proc = new Process { StartInfo = startInfo };
-                if (!proc.Start()) throw new Exception("Unable to start process " + executable + " " + startInfo.Arguments);
-                proc.WaitForExit();
-            }
-            catch (Exception ex)
-            {
-                Debug.Write(ex);
-            }
-
-        }
-
-        /// <summary>
-        /// Executes adb or fastboot from the executing folder (%AppData%)
-        /// </summary>
-        /// <param name="executable">ResourcesManager.AdbExe or ResourcesManager.FastbootExe</param>
-        /// <param name="device">The device to execute the command on (required attribute: SerialNumber)</param>
-        /// <param name="parameters">the list of parameters passed to the executable</param>
-        /// <returns>the output, null in case executable is not a file</returns>
-        private static string RunReturnString(string executable, Device device, IEnumerable<string> parameters)
+        private static ExeResponse Run(string executable, Device device, IEnumerable<string> parameters)
         {
             try
             {
@@ -86,13 +57,16 @@ namespace GiacomoFurlan.ADTlib.Utils
                 if (!proc.Start()) throw new Exception("Unable to start process " + executable + " " + startInfo.Arguments);
                 proc.WaitForExit();
 
-                Debug.WriteLine("Exit code: {0}", proc.ExitCode);
-
                 var error = proc.StandardError.ReadToEnd();
 
                 Debug.WriteIf(String.IsNullOrEmpty(error), error);
 
-                return proc.StandardOutput.ReadToEnd();
+                return new ExeResponse
+                {
+                    ExitCode = proc.ExitCode,
+                    StdError = proc.StandardError.ReadToEnd().TrimEnd(),
+                    StdOutput = proc.StandardOutput.ReadToEnd().TrimEnd()
+                };
             }
             catch (Exception ex)
             {
@@ -101,14 +75,9 @@ namespace GiacomoFurlan.ADTlib.Utils
             }
         }
 
-        public static void Adb(Device device, IEnumerable<string> parameters)
+        public static ExeResponse Adb(Device device, IEnumerable<string> parameters)
         {
-            Run(ResourcesManager.AdbExe, device, parameters);
-        }
-
-        public static string AdbReturnString(Device device, IEnumerable<string> parameters)
-        {
-            return RunReturnString(ResourcesManager.AdbExe, device, parameters);
+            return Run(ResourcesManager.AdbExe, device, parameters);
         }
     }
 }

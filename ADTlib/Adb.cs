@@ -11,14 +11,18 @@ namespace GiacomoFurlan.ADTlib
     public class Adb
     {
 
-        public const string CommandBackup = "backup";
-        public const string CommandEmulator = "emu";
-        public const string CommandInstall = "install";
-        public const string CommandPull = "pull";
-        public const string CommandPush = "push";
-        public const string CommandRestore = "restore";
-        public const string CommandShell = "shell";
-        public const string CommandUninstall = "unistall";
+        internal const string CommandBackup = "backup";
+        internal const string CommandEmulator = "emu";
+        internal const string CommandInstall = "install";
+        internal const string CommandPull = "pull";
+        internal const string CommandPush = "push";
+        internal const string CommandReboot = "reboot";
+        internal const string CommandRestore = "restore";
+        internal const string CommandShell = "shell";
+        internal const string CommandUninstall = "unistall";
+
+        public const string RebootBootloader = "bootloader";
+        public const string RebootRecovery = "recovery";
 
         public const string StateBootloader = "bootloader";
         public const string StateDevice = "device";
@@ -42,11 +46,11 @@ namespace GiacomoFurlan.ADTlib
         /// <returns></returns>
         public List<Device> GetDevicesList()
         {
-            var output = Exe.AdbReturnString(null, new[] {"devices"});
+            var output = Exe.Adb(null, new[] {"devices"});
 
-            if (output == null) return null;
+            if (ExeResponse.IsNullOrAbnormalExit(output)) return null;
 
-            var cursor = output.Split(new[] {Environment.NewLine}, StringSplitOptions.None).GetEnumerator();
+            var cursor = output.StdOutput.Split(new[] {Environment.NewLine}, StringSplitOptions.None).GetEnumerator();
 
             var devices = new List<Device>();
             while (cursor.MoveNext())
@@ -74,63 +78,36 @@ namespace GiacomoFurlan.ADTlib
         /// <returns></returns>
         public string GetDeviceState(Device device)
         {
-            return Execute(device, "get-state", true).TrimEnd() ?? StateUnknown;
+            var exec = Execute(device, "get-state");
+            return ExeResponse.IsNullOrAbnormalExit(exec) ? StateUnknown : exec.StdOutput;
         }
 
         /// <summary>
-        /// Executes a generic ADB command. If returnValue is true, it will output the command output (if any)
-        /// </summary>
-        /// <param name="device"></param>
-        /// <param name="command"></param>
-        /// <param name="returnValue"></param>
-        /// <param name="arguments"></param>
-        /// <returns></returns>
-        public string ExecuteNoParametric(Device device, string command, bool returnValue, IEnumerable<string> arguments)
-        {
-            if (String.IsNullOrEmpty(command)) return null;
-            if (arguments == null) arguments = new string[] { };
-
-            arguments = new string[] { command }.Concat(arguments).ToArray();
-
-            if (returnValue) return Exe.AdbReturnString(device, arguments);
-
-            Exe.Adb(device, arguments);
-            return null;
-        }
-
-        /// <summary>
-        /// Executes a generic ADB command. If returnValue is true, it will output the command output (if any)
+        /// Executes a generic ADB command.
         /// </summary>
         /// <param name="device">Optional if there is only one device attached</param>
         /// <param name="command"></param>
         /// <param name="arguments"></param>
-        /// <param name="returnValue"></param>
         /// <returns></returns>
-        public string Execute(Device device, string command, bool returnValue, params string[] arguments)
+        public ExeResponse Execute(Device device, string command, params string[] arguments)
         {
-            return ExecuteNoParametric(device, command, returnValue, arguments);
+            if (String.IsNullOrEmpty(command)) return null;
+            if (arguments == null) arguments = new string[] { };
+
+            arguments = new[] { command }.Concat(arguments).ToArray();
+
+            return Exe.Adb(device, arguments);
         }
 
         /// <summary>
-        /// Executes a shell command, returning the eventual result.
+        /// Executes a shell command.
         /// </summary>
         /// <param name="device">The device to execute the command on, if null the first one will be used.</param>
         /// <param name="parameters">The command and its arguments</param>
         /// <returns></returns>
-        public string ShellNoParametric(Device device, IEnumerable<string> parameters)
+        public ExeResponse Shell(Device device, params string[] parameters)
         {
-            return ExecuteNoParametric(device, CommandShell, true, parameters).TrimEnd();
-        }
-
-        /// <summary>
-        /// Executes a shell command, returning the eventual result.
-        /// </summary>
-        /// <param name="device">The device to execute the command on, if null the first one will be used.</param>
-        /// <param name="parameters">The command and its arguments</param>
-        /// <returns></returns>
-        public string Shell(Device device, params string[] parameters)
-        {
-            return Execute(device, CommandShell, true, parameters).TrimEnd();
+            return Execute(device, CommandShell, parameters);
         }
 
         /// <summary>
@@ -151,18 +128,19 @@ namespace GiacomoFurlan.ADTlib
 
             // create the destination path
             var mkdir = Shell(device, "mkdir -p", destDirectory);
-            if (mkdir.Contains("failed"))
+
+            if (ExeResponse.IsNullOrAbnormalExit(mkdir) || mkdir.StdOutput.Contains("failed"))
             {
                 Debug.WriteLine("Unable to create directory " + destDirectory);
                 return false;
             }
 
             // setup the arguments
-            var arguments = new string[]{ filePath, destDirectory + "/" + destFileName };
+            var arguments = new[] {filePath, destDirectory + "/" + destFileName};
 
             // execute
-            var push = Execute(device, CommandPush, true, arguments);
-            return push == null || !push.Contains("failed");
+            var push = Execute(device, CommandPush, arguments);
+            return !ExeResponse.IsNullOrAbnormalExit(push) && !push.StdOutput.Contains("failed");
         }
 
         /// <summary>
@@ -178,10 +156,10 @@ namespace GiacomoFurlan.ADTlib
             var destFileName = Path.GetFileName(destPath);
             if (String.IsNullOrEmpty(destFileName)) destFileName = Path.GetFileName(sourcePath);
 
-            var execute = Execute(device, CommandPull, true,
-                new string[] { sourcePath, Path.Combine(new string[] { destDirectory, destFileName }).WrapInQuotes() });
+            var execute = Execute(device, CommandPull, sourcePath,
+                Path.Combine(new[] {destDirectory, destFileName}).WrapInQuotes());
 
-            return execute == null || !execute.Contains("not exist");
+            return !ExeResponse.IsNullOrAbnormalExit(execute) && !execute.StdOutput.Contains("not exist");
         }
 
         /// <summary>
@@ -194,7 +172,7 @@ namespace GiacomoFurlan.ADTlib
         {
             var execute = Shell(device, "rm -rf", pathToFileOrDirectory);
 
-            return (String.IsNullOrEmpty(execute));
+            return !ExeResponse.IsNullOrAbnormalExit(execute) && String.IsNullOrEmpty(execute.StdOutput);
         }
 
         /// <summary>
@@ -217,7 +195,7 @@ namespace GiacomoFurlan.ADTlib
             if (onSdCard) parameters.Add("-s");
             if (encryption != null && encryption.IsComplete)
             {
-                parameters.AddRange(new string[]
+                parameters.AddRange(new[]
                 {
                     "--algo", encryption.Algorithm,
                     "--key", encryption.Key,
@@ -226,9 +204,10 @@ namespace GiacomoFurlan.ADTlib
             }
             parameters.Add(pathToApk.WrapInQuotes());
 
-            var execute = ExecuteNoParametric(device, CommandInstall, true, parameters);
+            var execute = Execute(device, CommandInstall, parameters.ToArray());
 
-            return execute.IndexOf("success", StringComparison.CurrentCultureIgnoreCase) > 0;
+            return !ExeResponse.IsNullOrAbnormalExit(execute) &&
+                   execute.StdOutput.IndexOf("success", StringComparison.CurrentCultureIgnoreCase) > 0;
         }
 
         /// <summary>
@@ -241,10 +220,13 @@ namespace GiacomoFurlan.ADTlib
         public bool Uninstall(Device device, string packageName, bool keepData)
         {
             var execute = keepData
-                ? Execute(device, CommandUninstall, true, "-k")
-                : Execute(device, CommandUninstall, true);
-            return execute.IndexOf("success", StringComparison.CurrentCultureIgnoreCase) > 0;
+                ? Execute(device, CommandUninstall, "-k")
+                : Execute(device, CommandUninstall);
+
+            return !ExeResponse.IsNullOrAbnormalExit(execute) &&
+                   execute.StdOutput.IndexOf("success", StringComparison.CurrentCultureIgnoreCase) > 0;
         }
+
 
         /// <summary>
         /// Backup the user's (and system's) applications and the relative data.
@@ -259,13 +241,12 @@ namespace GiacomoFurlan.ADTlib
         /// <param name="all">If you want to do a backup of all the applications</param>
         /// <param name="includeSystem">(Only if all is true) if you want to include the system applications in the complete backup</param>
         /// <param name="packages">(Only if all is false) the packages you want to do the backup</param>
-        public void BackupNoParametric(Device device, string pathToBackupFile, bool apk, bool obb, bool shared, bool all,
-            bool includeSystem, IEnumerable<string> packages)
+        public ExeResponse Backup(Device device, string pathToBackupFile, bool apk, bool obb, bool shared, bool all, bool includeSystem, params string[] packages)
         {
             var directory = Path.GetDirectoryName(pathToBackupFile);
             directory = directory ?? String.Empty;
             if (!Directory.Exists(pathToBackupFile)) Directory.CreateDirectory(directory);
-            packages = packages ?? new string[]{};
+            packages = packages ?? new string[] { };
 
             var parameters = new List<string>
             {
@@ -285,36 +266,30 @@ namespace GiacomoFurlan.ADTlib
                 parameters.AddRange(packages);
             }
 
-            ExecuteNoParametric(device, CommandBackup, false, parameters);
-        }
-
-        /// <summary>
-        /// Backup the user's (and system's) applications and the relative data.
-        /// It may throw an exception if you don't have the permission to write the backup file.
-        /// Note: it may take a while. It is highly suggested to be run in a separated thread.
-        /// </summary>
-        /// <param name="device">If null, the first device in the list will be used.</param>
-        /// <param name="pathToBackupFile">Where to save the backup (suggested extension: .ab)</param>
-        /// <param name="apk">If you want to include the APK files, too</param>
-        /// <param name="obb">If you want to include the APK extension files, too (the ones downloaded separately)</param>
-        /// <param name="shared">If you want to include the shared partition (/sdcard)</param>
-        /// <param name="all">If you want to do a backup of all the applications</param>
-        /// <param name="includeSystem">(Only if all is true) if you want to include the system applications in the complete backup</param>
-        /// <param name="packages">(Only if all is false) the packages you want to do the backup</param>
-        public void Backup(Device device, string pathToBackupFile, bool apk, bool obb, bool shared, bool all, bool includeSystem, params string[] packages)
-        {
-            BackupNoParametric(device, pathToBackupFile, apk, obb, shared, all, includeSystem, packages);
+            return Execute(device, CommandBackup, parameters.ToArray());
         }
 
         /// <summary>
         /// Restores an Android backup (done via <see cref="Backup"/> or in any case an ADB backup file)
+        /// NOTE: you have to "manually" wait the process to end, as adb immediately exits
         /// </summary>
         /// <param name="device">If null, the first device in the list will be used.</param>
         /// <param name="pathToBackupFile">The restore file path</param>
-        public void Restore(Device device, string pathToBackupFile)
+        public ExeResponse Restore(Device device, string pathToBackupFile)
         {
-            Execute(device, CommandRestore, false, pathToBackupFile.WrapInQuotes());
-            // NOTE: you have to "manually" wait the process to end, as adb immediately exits
+            return Execute(device, CommandRestore, pathToBackupFile.WrapInQuotes());
+        }
+
+        /// <summary>
+        /// Reboot the device. If mode is specified, reboots the device in bootloader or recovery.
+        /// </summary>
+        /// <param name="device">If null, the first device in the list will be used.</param>
+        /// <param name="mode">null, Adb.RebootBootloader or Adb.RebootRecovery</param>
+        public ExeResponse Reboot(Device device, string mode)
+        {
+            return String.IsNullOrEmpty(mode)
+                ? Execute(device, CommandReboot)
+                : Execute(device, CommandReboot, mode);
         }
     }
 }

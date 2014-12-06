@@ -14,7 +14,7 @@ namespace GiacomoFurlan.ADTlib.Utils
         public const string FastbootExe = "fastboot.exe";
 
         private const string ResourcesPath = "GiacomoFurlan.APTlib.Tools";
-        private static readonly string[] AptFolder = new[] { "GiacomoFurlan", "APTlib" };
+        private static readonly string[] AptFolder = { "GiacomoFurlan", "APTlib" };
 
         private string _execPath;
 
@@ -49,7 +49,6 @@ namespace GiacomoFurlan.ADTlib.Utils
 
         public bool WriteResourceFiles()
         {
-            var path = GetExecPath();
             try
             {
                 if (!Directory.Exists(_execPath)) Directory.CreateDirectory(_execPath);

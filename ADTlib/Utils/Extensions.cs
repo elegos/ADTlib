@@ -39,7 +39,7 @@ namespace GiacomoFurlan.ADTlib.Utils
                         break;
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     Debug.WriteLine("File in use: " + str);
                     System.Threading.Thread.Sleep(500);
