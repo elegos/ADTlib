@@ -96,12 +96,12 @@ namespace GiacomoFurlan.ADTlib.Utils
 
         }
 
-        public static void Adb(Device device, string[] parameters)
+        public static void Adb(Device device, IEnumerable<string> parameters)
         {
             Run(ResourcesManager.AdbExe, device, parameters);
         }
 
-        public static string AdbReturnString(Device device, string[] parameters)
+        public static string AdbReturnString(Device device, IEnumerable<string> parameters)
         {
             return RunReturnString(ResourcesManager.AdbExe, device, parameters);
         }

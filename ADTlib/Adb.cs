@@ -80,6 +80,27 @@ namespace GiacomoFurlan.ADTlib
         /// <summary>
         /// Executes a generic ADB command. If returnValue is true, it will output the command output (if any)
         /// </summary>
+        /// <param name="device"></param>
+        /// <param name="command"></param>
+        /// <param name="returnValue"></param>
+        /// <param name="arguments"></param>
+        /// <returns></returns>
+        public string ExecuteNoParams(Device device, string command, bool returnValue, IEnumerable<string> arguments)
+        {
+            if (String.IsNullOrEmpty(command)) return null;
+            if (arguments == null) arguments = new string[] { };
+
+            arguments = new string[] { command }.Concat(arguments).ToArray();
+
+            if (returnValue) return Exe.AdbReturnString(device, arguments);
+
+            Exe.Adb(device, arguments);
+            return null;
+        }
+
+        /// <summary>
+        /// Executes a generic ADB command. If returnValue is true, it will output the command output (if any)
+        /// </summary>
         /// <param name="device">Optional if there is only one device attached</param>
         /// <param name="command"></param>
         /// <param name="arguments"></param>
@@ -87,15 +108,18 @@ namespace GiacomoFurlan.ADTlib
         /// <returns></returns>
         public string Execute(Device device, string command, bool returnValue, params string[] arguments)
         {
-            if (String.IsNullOrEmpty(command)) return null;
-            if (arguments == null) arguments = new string[]{};
+            return ExecuteNoParams(device, command, returnValue, arguments);
+        }
 
-            arguments = new string[] {command}.Concat(arguments).ToArray();
-
-            if (returnValue) return Exe.AdbReturnString(device, arguments);
-
-            Exe.Adb(device, arguments);
-            return null;
+        /// <summary>
+        /// Executes a shell command, returning the eventual result.
+        /// </summary>
+        /// <param name="device">The device to execute the command on, if null the first one will be used.</param>
+        /// <param name="parameters">The command and its arguments</param>
+        /// <returns></returns>
+        public string ShellNoParams(Device device, IEnumerable<string> parameters)
+        {
+            return ExecuteNoParams(device, CommandShell, true, parameters).TrimEnd();
         }
 
         /// <summary>
@@ -171,6 +195,37 @@ namespace GiacomoFurlan.ADTlib
             var execute = Shell(device, "rm -rf", pathToFileOrDirectory);
 
             return (String.IsNullOrEmpty(execute));
+        }
+
+        /// <summary>
+        /// Install a local APK on the device
+        /// </summary>
+        /// <param name="device">If null, the first device in the list will be used.</param>
+        /// <param name="pathToApk">Path to the APK file to install</param>
+        /// <param name="forwardLock">(Deprecated by Google!) installs the application on a read-only space</param>
+        /// <param name="reinstall">Reinstall instead of installing as new, preserving the user's data</param>
+        /// <param name="onSdCard">Try to install the application on the sdcard instead of the internal storage</param>
+        /// <param name="encryption">If not null, it allows to setup the encryption details, if the apk is encrypted</param>
+        /// <returns></returns>
+        public bool Install(Device device, string pathToApk, bool forwardLock, bool reinstall, bool onSdCard, ApkEncryption encryption)
+        {
+            var parameters = new List<string>();
+
+            if (forwardLock) parameters.Add("-l");
+            if (reinstall) parameters.Add("-r");
+            if (onSdCard) parameters.Add("-s");
+            if (encryption != null && encryption.IsComplete)
+            {
+                parameters.AddRange(new string[]
+                {
+                    "--algo", encryption.Algorithm,
+                    "--key", encryption.Key,
+                    "--iv", encryption.IV
+                });
+            }
+            var execute = ExecuteNoParams(device, CommandInstall, true, parameters);
+
+            return execute.IndexOf("success", StringComparison.CurrentCultureIgnoreCase) > 0;
         }
     }
 }

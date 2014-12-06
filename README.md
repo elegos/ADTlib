@@ -19,7 +19,7 @@ It wraps the original executables and executes them, interpreting the output and
 	- ✔ Pull a file from the device
 	- ✔ Delete a file from the device
 	- ✔ Execute a shell command
-	- Install an application from an APK hosted on the computer
+	- ✔ Install an application from an APK hosted on the computer
 	- Uninstall an application
 	- Do a backup
 	- Do a restore from a previous backup
@@ -53,6 +53,16 @@ You may though want to know what the various classes do:
 
 ---
 ## Changelog ##
+0.4.0.0
+
+- Created non-parametrical method aliases for low-level commands
+- Added Adb.Install
+
+0.3.0.0
+
+- Using parametrical arguments
+- Added Adb.Shell
+
 0.2.0.0
 
 - The state of the device is being read dynamically executing `adb get-state`
