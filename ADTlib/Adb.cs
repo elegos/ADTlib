@@ -14,11 +14,15 @@ namespace GiacomoFurlan.ADTlib
         internal const string CommandBackup = "backup";
         internal const string CommandEmulator = "emu";
         internal const string CommandInstall = "install";
+        internal const string CommandKillServer = "kill-server";
         internal const string CommandPull = "pull";
         internal const string CommandPush = "push";
         internal const string CommandReboot = "reboot";
         internal const string CommandRestore = "restore";
+        internal const string CommandRemount = "remount";
         internal const string CommandShell = "shell";
+        internal const string CommandStartServer = "start-server";
+        internal const string CommandStartRoot = "root";
         internal const string CommandUninstall = "unistall";
         internal const string CommandWaitForDevice = "wait-for-device";
 
@@ -314,6 +318,50 @@ namespace GiacomoFurlan.ADTlib
         public void WaitForDevice(Device device, int? timeoutMilliseconds)
         {
             Execute(device, CommandWaitForDevice, timeoutMilliseconds);
+        }
+
+        /// <summary>
+        /// Ensure that there is a server running
+        /// </summary>
+        public void StartServer()
+        {
+            Execute(null, CommandStartServer);
+        }
+
+        /// <summary>
+        /// Kill the server if it is running
+        /// </summary>
+        public void KillServer()
+        {
+            Execute(null, CommandKillServer);
+        }
+
+        /// <summary>
+        /// Restart the adb server as root for the specified device
+        /// </summary>
+        /// <param name="device">If null, the first connected device will trigger the end of the method.</param>
+        /// <returns></returns>
+        public bool StartAsRoot(Device device)
+        {
+            var exec = Execute(device, CommandStartRoot);
+
+            return !ExeResponse.IsNullOrAbnormalExit(exec) &&
+                exec.ExitCode == 0 &&
+                exec.Output.IndexOf("cannot run", StringComparison.CurrentCultureIgnoreCase) == -1;
+        }
+
+        /// <summary>
+        /// Remount the system partition as rw
+        /// </summary>
+        /// <param name="device">If null, the first connected device will trigger the end of the method.</param>
+        /// <returns></returns>
+        public bool RemountSystem(Device device)
+        {
+            var exec = Execute(device, CommandRemount);
+
+            return !ExeResponse.IsNullOrAbnormalExit(exec) &&
+                exec.ExitCode == 0 &&
+                exec.Output.IndexOf("remount failed", StringComparison.CurrentCultureIgnoreCase) == -1;
         }
     }
 }

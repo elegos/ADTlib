@@ -26,9 +26,9 @@ It wraps the original executables and executes them, interpreting the output and
 	- ✔ Reboot
 - **Advanced ADB commands**
 	- ✔ Wait for any device, or a specific one
-	- Start and kill the adb server
-	- (Re)start the adb server as root
-	- Remount the /system partition in read/write
+	- ✔ Start and kill the adb server
+	- ✔ (Re)start the adb server as root
+	- ✔ Remount the /system partition in read/write
 	- Switch between ADB TCP and USB mode
 - **Basic Fastboot commands** (TBA)
 - **Advanced Fastboot commands** (TBA)
@@ -54,6 +54,12 @@ You may though want to know what the various classes do:
 
 ---
 ## Changelog ##
+0.8.0.0
+
+- Start and kill the ADB server
+- Start the ADB server as root for a particular device
+- Remount the system partition as read/write
+
 0.7.0.0
 
 - Added Adb.WaitForDevice

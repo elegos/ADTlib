@@ -25,13 +25,16 @@ namespace Tests
                 #endregion
 
                 #region Class Adb
+                Console.WriteLine("Starting the adb server");
+                adb.StartServer();
+
                 Console.WriteLine("Waiting for device(s) (10 seconds)...");
                 adb.WaitForDevice(null, 10000);
                 Console.WriteLine("Executing Adb.GetDevicesList()");
                 var devices = adb.GetDevicesList();
                 if (devices == null || !devices.Any())
                 {
-                    Console.WriteLine("No devices found. Press any key to exit.");
+                    Console.WriteLine("No devices found.");
                     goto EndOfTests;
                 }
                 foreach (var device in devices)
@@ -79,7 +82,14 @@ namespace Tests
                 adb.Restore(testDevice, tempBackup);
                 Console.WriteLine("Press any key when the restore process is completed.");
                 Console.ReadKey();
+                Console.WriteLine();
                 if (File.Exists(tempBackup)) File.Delete(tempBackup);
+
+                Console.WriteLine("Trying to start the server as root (needs a rooted device)");
+                Console.WriteLine(adb.StartAsRoot(testDevice) ? "Success" : "Failure");
+
+                Console.WriteLine("Trying to remount /system partition as rw (needs adb in root mode)");
+                Console.WriteLine(adb.RemountSystem(testDevice) ? "Success (warning: /system is now rw untill reboot)" : "Failure");
                 #endregion
             }
             catch (Exception ex)
@@ -89,7 +99,9 @@ namespace Tests
 
             // end of tests
             EndOfTests:
-            Console.WriteLine(Environment.NewLine + "Press any key to exit.");
+            Console.WriteLine(Environment.NewLine + "Killing the adb server");
+            adb.KillServer();
+            Console.WriteLine("Press any key to exit.");
             Console.ReadKey();
         }
     }
